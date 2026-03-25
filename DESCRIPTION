@@ -11,14 +11,22 @@ Description: Ce package permet de télécharger et de préparer les données
     flux WFS du Sandre.
 License: GPL (>= 3)
 Imports: 
+    aspe,
     COGiter,
+    cowplot,
     dplyr,
+    ggplot2,
     httr,
     hubeau,
+    leaflet,
     lubridate,
     ows4R,
     purrr,
+    rmapshaper,
     sf,
+    stringr,
+    tibble,
+    tidyr,
     tools,
     utils
 Encoding: UTF-8
