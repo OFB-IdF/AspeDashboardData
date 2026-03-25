@@ -1,22 +1,25 @@
 Type: Package
 Package: AspeDashboardData
-Title: Récupération et Préparation des Données pour le Tableau de Bord ASPE
+Title: Récupération et Préparation des Données pour le Tableau de Bord
+    ASPE
 Version: 0.0.0.9000
 Author: Cédric Mondy [aut, cre]
 Maintainer: Cédric Mondy <cedric.mondy@ofb.gouv.fr>
 Description: Ce package permet de télécharger et de préparer les données
     nécessaires au fonctionnement de l'application Shiny AspeDashboard.
-    Il s'appuie entre autre sur les API Hub'eau (données poissons) et les flux WFS
-    du Sandre.
+    Il s'appuie entre autre sur les API Hub'eau (données poissons) et les
+    flux WFS du Sandre.
 License: GPL (>= 3)
 Imports: 
     dplyr,
     httr,
     hubeau,
+    lubridate,
     ows4R,
     purrr,
     sf,
-    tools
+    tools,
+    utils
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.3

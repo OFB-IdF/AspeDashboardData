@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' get_data_poissons(endpoint = "stations", code_departement = "44")
+#' get_data_poissons(endpoint = "stations", code_departement = "94")
 #' }
 #' @importFrom hubeau get_poisson_stations get_poisson_operations
 #' @importFrom dplyr filter pull
@@ -92,18 +92,23 @@ get_data_poissons <- function(endpoint, stations = NULL, ..., ntry_max = 99) {
 #'
 #' @examples
 #' \dontrun{
-#' prep_data_dashboard(data_file = "data/aspe_data.rda", code_departement = "44")
+#' prep_data_dashboard(data_file = "data/aspe_data.rda", code_departement = "94")
 #' }
 #' @importFrom tools file_ext
+#' @importFrom lubridate is.Date
 #' @importFrom dplyr distinct filter bind_rows
 #' @importFrom hubeau get_poisson_stations
 get_data_hubeau <- function(update = FALSE, ..., data_file) {
-    if (is.null(data_file)) stop("L'emplacement où sauvegarder les données (data_file) doit être renseigné")
+    if (is.null(data_file) | tools::file_ext(data_file) != "rda") stop("L'emplacement où sauvegarder les données (data_file) doit être renseigné et correspondre à un fichier rda")
 
     if (update) {
-        if (!file.exists(data_file) | tools::file_ext(data_file) != "rda") stop("Si update est TRUE, data_file doit être un fichier rda existant")
+        if (!file.exists(data_file)) stop("Si update est TRUE, data_file doit exister")
 
         load(data_file)
+
+        if (any(sapply(c("date_export", "operations", "stations", "indicateurs", "observations"), function(x){!exists(x)}))) stop("Le fichier data_file doit être un fichier rda contenant les objets: date_export, stations, operations, indicateurs et observations")
+        if (!lubridate::is.Date(date_export)) stop("L'objet date_export stocké dans data_file doit être au format date")
+        if (any(sapply(c("stations", "operations", "indicateurs", "observations"), function(x) {!is.data.frame(get(x))}))) stop("Les objets stations, operations, indicateurs et observations stockés dans data_file doivent être des data.frame")
 
         date_from <- date_export
         message("Récupération des opérations crées ou modifiées après le ", date_from)
@@ -119,20 +124,22 @@ get_data_hubeau <- function(update = FALSE, ..., data_file) {
         date_modification_operation_min = date_from,
         fields = "code_operation,code_station,date_operation,code_point_prelevement_aspe,libelle_station,protocole_peche,surface_calculee,coordonnee_x_point_prelevement,coordonnee_y_point_prelevement,code_epsg_projection_point_prelevement,libelle_qualification_operation",
         ...
-    ) |>
-        dplyr::distinct()|>
-        dplyr::filter(
-            libelle_qualification_operation == "Correcte",
-            protocole_peche %in% c(
-                "Pêche complète à un ou plusieurs passages",
-                "Pêche par ambiances",
-                "Pêche partielle par points (grand milieu)",
-                "Pêche partielle sur berge"
-            ),
-            !is.na(code_station)
-        )
+    )
 
     if (nrow(new_operations) > 0) {
+        new_operations <- new_operations  |>
+            dplyr::distinct()|>
+            dplyr::filter(
+                libelle_qualification_operation == "Correcte",
+                protocole_peche %in% c(
+                    "Pêche complète à un ou plusieurs passages",
+                    "Pêche par ambiances",
+                    "Pêche partielle par points (grand milieu)",
+                    "Pêche partielle sur berge"
+                ),
+                !is.na(code_station)
+            )
+
         new_stations <- hubeau::get_poisson_stations(
             fields = "code_station,libelle_station",
             ...
