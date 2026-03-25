@@ -11,6 +11,7 @@ Description: Ce package permet de télécharger et de préparer les données
     flux WFS du Sandre.
 License: GPL (>= 3)
 Imports: 
+    COGiter,
     dplyr,
     httr,
     hubeau,

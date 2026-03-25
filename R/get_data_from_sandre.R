@@ -57,3 +57,42 @@ read_sandre_wfs <- function(layer, crs, sandre_url = "https://services.sandre.ea
         httr::build_url() |>
         sf::st_read()
 }
+
+#' Téléchargement et préparation des données géographiques du Sandre
+#'
+#' Cette fonction télécharge les couches WFS du Sandre nécessaires au tableau de bord
+#' (Secteurs hydrographiques et Bassins hydrographiques), calcule les Régions
+#' hydrographiques et sauvegarde le tout dans un fichier .rda.
+#'
+#' @param data_file Chemin vers le fichier .rda où les données seront sauvegardées.
+#'     Le fichier doit avoir l'extension .rda.
+#'
+#' @return La fonction ne retourne rien explicitement mais sauvegarde un fichier .rda
+#'     contenant les objets : sh_geo, rh_geo et dh_geo.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' get_data_sandre(data_file = "data/sandre_geo.rda")
+#' }
+#' @importFrom tools file_ext
+#' @importFrom dplyr group_by summarise
+get_data_sandre <- function(data_file) {
+    if (is.null(data_file) | tools::file_ext(data_file) != "rda") stop("L'emplacement où sauvegarder les données (data_file) doit être renseigné et correspondre à un fichier rda")
+
+    sh_geo <- read_sandre_wfs(
+        layer = "sa:SecteurHydro_FXX_Carthage2017",
+        crs = 2154
+    )
+
+    rh_geo <- sh_geo |>
+        dplyr::group_by(LbRegionHydro) |>
+        dplyr::summarise(.groups = "drop")
+
+    dh_geo <- read_sandre_wfs(
+        layer = "sa:BassinHydrographique_FXX_Topage2019",
+        crs = 2154
+    )
+
+    save(sh_geo, rh_geo, dh_geo, file = data_file)
+}

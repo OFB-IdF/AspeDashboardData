@@ -14,5 +14,6 @@
 if(getRversion() >= "2.15.1")  utils::globalVariables(c(
   "code_station", "code_operation", "libelle_qualification_operation",
   "protocole_peche", "code_alternatif_taxon", "date_export",
-  "stations", "operations", "indicateurs", "observations", "new_indicateurs", "new_observations"
+  "stations", "operations", "indicateurs", "observations", "new_indicateurs", "new_observations",
+  "LbRegionHydro", "REG", "DEP", "NCCENR"
 ))
