@@ -97,26 +97,10 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
             dir.create(popup_dir, recursive = TRUE)
         }
 
-        if (dir.exists(file.path(popup_dir, "especes")))
-            unlink(file.path(popup_dir, "especes"), recursive = TRUE)
-        dir.create(file.path(popup_dir, "especes"))
-        if (dir.exists(file.path(popup_dir, "ipr")))
-            unlink(file.path(popup_dir, "ipr"), recursive = TRUE)
-        dir.create(file.path(popup_dir, "ipr"))
-
-        if (file.exists(file.path(popup_dir, "especes.tar"))) {
-            utils::untar(
-                tarfile = file.path(popup_dir, "especes.tar"),
-                exdir = file.path(popup_dir, "especes")
-            )
-        }
-
-        if (file.exists(file.path(popup_dir, "ipr.tar"))) {
-            utils::untar(
-                tarfile = file.path(popup_dir, "ipr.tar"),
-                exdir = file.path(popup_dir, "ipr")
-            )
-        }
+        if (!dir.exists(file.path(popup_dir, "especes")))
+            dir.create(file.path(popup_dir, "especes"))
+        if (!dir.exists(file.path(popup_dir, "ipr")))
+            dir.create(file.path(popup_dir, "ipr"))
 
         message("Créer les popups peuplement")
         popups_especes <- prep_sauver_popups(
