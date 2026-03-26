@@ -29,7 +29,7 @@ get_data_poissons <- function(endpoint, stations = NULL, ..., ntry_max = 99) {
     if (inherits(results, "try-error")) {
 
         if (is.null(stations)) {
-            stations <- hubeau::get_poisson_stations(...) |>
+            stations <- hubeau::get_poisson_stations() |>
                 dplyr::filter(!is.na(code_station)) |>
                 dplyr::pull(code_station)
         }
