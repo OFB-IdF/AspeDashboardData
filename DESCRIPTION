@@ -9,7 +9,7 @@ Description: Ce package permet de télécharger et de préparer les données
     nécessaires au fonctionnement de l'application Shiny AspeDashboard.
     Il s'appuie entre autre sur les API Hub'eau (données poissons) et les
     flux WFS du Sandre.
-License: GPL (>= 3)
+License: Open Licence 2.0
 Imports: 
     aspe,
     COGiter,
