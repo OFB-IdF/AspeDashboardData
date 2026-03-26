@@ -76,7 +76,7 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     LegendeIpr <- legendes$ipr
     LegendeDistribution <- legendes$distribution
 
-    save(date_export, pop_geo, captures, ipr, metriques, codes_especes, carte_operations, LegendeEspeces, LegendeIpr, LegendeDistribution, file = data_dashboard)
+    save(date_export, pop_geo, captures, ipr, metriques, codes_especes, carte_operations, LegendeEspeces, LegendeIpr, LegendeDistribution, classe_ipr, file = data_dashboard)
 }
 
 #' Préparation des données de captures
@@ -144,7 +144,7 @@ prep_captures <- function(stations, operations, observations, pop) {
             by = "pop_id"
         ) |>
         dplyr::select(
-            sta_code_sandre, sta_libelle_sandre, pop_id, pop_libelle, ope_id, ope_date, annee, ope_surface_calculee, dh_libelle, dept_id, esp_code_alternatif, effectif, densite
+            sta_code_sandre, sta_libelle_sandre, pop_id, pop_libelle, ope_id, ope_date, annee, ope_surface_calculee, dh_libelle, dept_id, pro_libelle, esp_code_alternatif, effectif, densite
         )
 
 }
