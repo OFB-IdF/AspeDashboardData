@@ -87,7 +87,7 @@ get_data_poissons <- function(endpoint, stations = NULL, ..., ntry_max = 99) {
 #' @param ... Paramètres additionnels passés à \code{get_data_poissons} (ex: code_departement).
 #' @param data_file Chemin vers le fichier .rda où les données seront sauvegardées ou chargées.
 #'
-#' @return La fonction ne retourne rien explicitement mais sauvegarde un fichier .rda contenant les objets : stations, opérations, indicateurs, observations et date_export.
+#' @return La fonction sauvegarde un fichier .rda contenant les objets : stations, opérations, indicateurs, observations et date_export. Elle retourne également la liste des codes stations pour lesquels des informations ont été récupérées.
 #' @export
 #'
 #' @examples
@@ -190,6 +190,7 @@ get_data_hubeau <- function(update = FALSE, ..., data_file) {
 
         save(operations, stations, indicateurs, observations, date_export, file = data_file)
         message("    Les données ont été sauvegardées dans ", data_file)
+        return(unique(new_stations$code_station))
 
     } else {
         message("    Pas de données récupérées")
