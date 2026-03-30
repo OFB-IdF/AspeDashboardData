@@ -4,7 +4,7 @@
 #' les sauvegarde sous forme de fichiers HTML (widgets) et les archive.
 #'
 #' @param codes_stations Vecteur de codes stations (Sandre) pour lesquels générer les popups.
-#' @param data_dashboard Chemin vers le fichier .rda contenant les données préparées du tableau de bord.
+#' @param data_dashboard Chemin vers le dossier contenant les données préparées du tableau de bord.
 #' @param popup_dir Répertoire de destination pour les popups et les archives.
 #' @param css_template Chemin vers le fichier CSS de template pour le style des popups.
 #' @param dim_base Facteur de dimensionnement de base pour les graphiques (défaut : 0.82).
@@ -26,11 +26,13 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
             hauteur = dim_base*4.85
         )
 
-        load(data_dashboard)
+        captures <- arrow::open_dataset(file.path(data_dashboard, "captures.parquet"))
+        ipr <- arrow::open_dataset(file.path(data_dashboard, "ipr.parquet"))
 
         message("Créer les graphiques peuplement")
         plots_especes <- captures |>
             dplyr::filter(sta_code_sandre %in% codes_stations) |>
+            dplyr::collect() |>
             aspe::gg_temp_peuplement(
                 var_id_sta = pop_id,
                 var_libelle_sta = pop_libelle,
@@ -52,6 +54,7 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
                         dplyr::pull(pop_id)
                 )
             ) |>
+            dplyr::collect() |>
             dplyr::group_by(sup_500m) |>
             dplyr::group_split() |>
             purrr::map(

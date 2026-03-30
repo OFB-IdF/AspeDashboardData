@@ -2,14 +2,16 @@
 #'
 #' Cette fonction charge les données du Sandre et de Hub'eau, prépare les fonds de carte
 #' administratifs, calcule les indicateurs et les synthèses nécessaires à l'application
-#' Shiny, et sauvegarde le tout dans un fichier unique.
+#' Shiny, et sauvegarde le tout. Pour optimiser la mémoire, les tables
+#' volumineuses sont exportées au format Parquet.
 #'
 #' @param data_sandre Chemin vers le fichier .rda contenant les données du Sandre (sh_geo, dh_geo).
 #' @param data_hubeau Chemin vers le fichier .rda contenant les données de Hub'eau (stations, operations, observations, indicateurs).
-#' @param data_dashboard Chemin vers le fichier .rda de sortie pour l'application Shiny.
+#' @param data_dashboard Chemin vers le fichier .rda de sortie pour les métadonnées de l'application Shiny.
 #'
-#' @return La fonction ne retourne rien explicitement mais sauvegarde un fichier .rda
-#'     contenant tous les objets nécessaires au tableau de bord.
+#' @return La fonction ne retourne rien explicitement mais sauvegarde plusieurs fichiers
+#'     dans le répertoire de \code{data_dashboard} : un fichier .rda pour les métadonnées,
+#'     des fichiers .parquet pour les tables volumineuses, et un fichier .rds pour les données spatiales.
 #' @export
 #'
 #' @examples
@@ -17,13 +19,15 @@
 #' prep_data_dashboard(
 #'   data_sandre = "data/sandre_geo.rda",
 #'   data_hubeau = "data/hubeau_data.rda",
-#'   data_dashboard = "data/dashboard_data.rda"
+#'   data_dashboard = "data/dashboard_metadata.rda"
 #' )
 #' }
 #' @importFrom tools file_ext
-#' @importFrom dplyr left_join select
+#' @importFrom dplyr left_join select mutate
 #' @importFrom aspe ip_completer_classes_couleur
 #' @importFrom purrr set_names
+#' @importFrom sf st_coordinates st_drop_geometry
+#' @importFrom arrow write_parquet
 prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     if (is.null(data_sandre) | tools::file_ext(data_sandre) != "rda") stop("Les données des référentiels du Sandre doivent être stockées dans un fichier rda (data_sandre)")
     if (is.null(data_hubeau) | tools::file_ext(data_hubeau) != "rda") stop("Les données administratives doivent être stockées dans un fichier rda (data_admin)")
@@ -76,7 +80,31 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     LegendeIpr <- legendes$ipr
     LegendeDistribution <- legendes$distribution
 
-    save(date_export, pop_geo, captures, ipr, metriques, codes_especes, carte_operations, LegendeEspeces, LegendeIpr, LegendeDistribution, classe_ipr, file = data_dashboard)
+    # Conversion en Parquet pour optimisation mémoire
+    message("Export des tables au format Parquet")
+    tables <- c("captures", "ipr", "carte_operations", "metriques")
+
+    for (table in tables) {
+        if (exists(table)) {
+            arrow::write_parquet(get(table), file.path(data_dashboard, paste0(table, ".parquet")))
+        }
+    }
+
+    # Pour pop_geo (spatial), on le garde en RDS et on le convertit en parquet avec coords
+    if (exists("pop_geo")) {
+        pop_df <- pop_geo |>
+            dplyr::mutate(
+                x = sf::st_coordinates(geometry)[,1],
+                y = sf::st_coordinates(geometry)[,2]
+            ) |>
+            sf::st_drop_geometry()
+        arrow::write_parquet(pop_df, file.path(data_dashboard, "pop_geo.parquet"))
+        saveRDS(pop_geo, file.path(data_dashboard, "pop_geo.rds"))
+    }
+
+    # On ne garde que les petits objets (métadonnées) dans le RDA
+    objets_legers <- c("date_export", "codes_especes", "LegendeEspeces", "LegendeIpr", "LegendeDistribution", "classe_ipr")
+    save(list = objets_legers, file = file.path(data_dashboard, "metadata.rda"))
 }
 
 #' Préparation des données de captures

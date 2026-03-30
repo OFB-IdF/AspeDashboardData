@@ -11,6 +11,7 @@ Description: Ce package permet de télécharger et de préparer les données
     flux WFS du Sandre.
 License: Open Licence 2.0
 Imports: 
+    arrow,
     aspe,
     COGiter,
     cowplot,

@@ -21,7 +21,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c(
   "esp_code_alternatif", "effectif", "densite", "dept_id", "dh_libelle",
   "altitude", "sup_500m", "cli_libelle", "ipr_nte", "ipr_ner",
   "ipr_nel", "ipr_dit", "ipr_dii", "ipr_dio", "ipr_dti", "metrique", "valeur", "variable",
-  "pop_coordonnees_x", "pop_coordonnees_y", "typ_code_epsg", "x_l93", "y_l93", "X", "Y",
+  "pop_coordonnees_x", "pop_coordonnees_y", "typ_code_epsg", "x_l93", "y_l93", "X", "Y", "x", "y", "geometry",
   "INSEE_REG", "INSEE_DEP", "NOM_DEP", "NOM_REG", "CdSecteurHydro", "LbSecteurHydro",
   "CdRegionHydro", "LbRegionHydro", "CdBH", "LbBH", "nb_esp", "nb_annees",
   "derniere_annee", "donnees_recentes", "nb_annees_tot", "classe_couleur", "couleur",
