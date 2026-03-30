@@ -85,7 +85,8 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
                                     hauteur = DimensionsPopups$hauteur,
                                     titre_graphique = "",
                                     titre_y = "Valeur d'IPR",
-                                    df_classes = classe_ipr,
+                                    df_classes = classe_ipr |>
+                                        aspe::ip_completer_classes_couleur(),
                                     options = list(ggiraph::opts_sizing(rescale = TRUE,
                                                                         width = .96))
                                 )
