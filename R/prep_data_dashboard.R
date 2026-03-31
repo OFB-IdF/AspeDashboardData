@@ -7,7 +7,7 @@
 #'
 #' @param data_sandre Chemin vers le fichier .rda contenant les données du Sandre (sh_geo, dh_geo).
 #' @param data_hubeau Chemin vers le fichier .rda contenant les données de Hub'eau (stations, operations, observations, indicateurs).
-#' @param data_dashboard Chemin vers le fichier .rda de sortie pour les métadonnées de l'application Shiny.
+#' @param data_dashboard Dossier de sortie des données de l'application Shiny.
 #'
 #' @return La fonction ne retourne rien explicitement mais sauvegarde plusieurs fichiers
 #'     dans le répertoire de \code{data_dashboard} : un fichier .rda pour les métadonnées,
@@ -19,7 +19,7 @@
 #' prep_data_dashboard(
 #'   data_sandre = "data/sandre_geo.rda",
 #'   data_hubeau = "data/hubeau_data.rda",
-#'   data_dashboard = "data/dashboard_metadata.rda"
+#'   data_dashboard = "data"
 #' )
 #' }
 #' @importFrom tools file_ext
