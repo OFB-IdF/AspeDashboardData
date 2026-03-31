@@ -29,7 +29,8 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
         captures <- arrow::open_dataset(file.path(data_dashboard, "captures.parquet"))
         ipr <- arrow::open_dataset(file.path(data_dashboard, "ipr.parquet"))
 
-        message("Créer les graphiques peuplement")
+        message("Créer les graphiques")
+        cat("\n   Peuplements")
         plots_especes <- captures |>
             dplyr::filter(sta_code_sandre %in% codes_stations) |>
             dplyr::collect() |>
@@ -44,7 +45,7 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
                 width = .96
             )
 
-        message("Créer les graphiques IPR")
+        cat("\n   IPR")
         plots_ipr <- ipr |>
             dplyr::filter(
                 pop_id %in% (
@@ -97,6 +98,7 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
             ) |>
             purrr::reduce(.f = c)
 
+        message("Enregistrer les popups")
         if (!dir.exists(popup_dir)) {
             dir.create(popup_dir, recursive = TRUE)
         }
@@ -106,7 +108,7 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
         if (!dir.exists(file.path(popup_dir, "ipr")))
             dir.create(file.path(popup_dir, "ipr"))
 
-        message("Créer les popups peuplement")
+        cat("\n   Peuplements")
         popups_especes <- prep_sauver_popups(
             plots = plots_especes,
             dir_popup = file.path(popup_dir, "especes"),
@@ -119,10 +121,11 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
 
         archiver_popups(
             dir_popup = file.path(popup_dir, "especes"),
-            archive_name = file.path(popup_dir, "especes.tar")
+            archive_name = file.path(popup_dir, "especes.tar"),
+            delete_dir = TRUE
         )
 
-        message("Créer les popups IPR")
+        cat("\n   IPR")
         popups_ipr <- prep_sauver_popups(
             plots = plots_ipr,
             dir_popup = file.path(popup_dir, "ipr"),
@@ -135,7 +138,8 @@ prep_popups <- function(codes_stations, data_dashboard, popup_dir, css_template,
 
         archiver_popups(
             dir_popup = file.path(popup_dir, "ipr"),
-            archive_name = file.path(popup_dir, "ipr.tar")
+            archive_name = file.path(popup_dir, "ipr.tar"),
+            delete_dir = TRUE
         )
 
         file.copy(
