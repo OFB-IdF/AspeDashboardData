@@ -28,6 +28,9 @@
 #' @importFrom purrr set_names
 #' @importFrom sf st_coordinates st_drop_geometry
 #' @importFrom arrow write_parquet
+#' @importFrom ggplot2 ggsave margin
+#' @importFrom ragg agg_webp
+#' @importFrom magick image_read image_trim image_write
 prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     if (is.null(data_sandre) | tools::file_ext(data_sandre) != "rda") stop("Les données des référentiels du Sandre doivent être stockées dans un fichier rda (data_sandre)")
     if (is.null(data_hubeau) | tools::file_ext(data_hubeau) != "rda") stop("Les données administratives doivent être stockées dans un fichier rda (data_admin)")
@@ -80,6 +83,29 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     LegendeIpr <- legendes$ipr
     LegendeDistribution <- legendes$distribution
 
+    # Sauvegarde des légendes en format webp pour alléger les métadonnées
+    message("Export des légendes au format WebP")
+    
+    # Fonction pour sauvegarder et rogner l'image
+    save_and_trim <- function(plot, filename, data_dashboard) {
+        path <- file.path(data_dashboard, filename)
+        ggplot2::ggsave(
+            path, 
+            plot = plot, 
+            width = 6, height = 2, dpi = 150, 
+            device = ragg::agg_webp,
+            bg = "transparent"
+        )
+        # On utilise magick pour supprimer les espaces vides (trim)
+        img <- magick::image_read(path)
+        img <- magick::image_trim(img)
+        magick::image_write(img, path)
+    }
+
+    save_and_trim(LegendeEspeces, "legende_especes.webp", data_dashboard)
+    save_and_trim(LegendeIpr, "legende_ipr.webp", data_dashboard)
+    save_and_trim(LegendeDistribution, "legende_distribution.webp", data_dashboard)
+
     # Conversion en Parquet pour optimisation mémoire
     message("Export des tables au format Parquet")
     tables <- c("captures", "ipr", "carte_operations", "metriques")
@@ -103,7 +129,7 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     }
 
     # On ne garde que les petits objets (métadonnées) dans le RDA
-    objets_legers <- c("date_export", "codes_especes", "LegendeEspeces", "LegendeIpr", "LegendeDistribution", "classe_ipr")
+    objets_legers <- c("date_export", "codes_especes", "classe_ipr")
     save(list = objets_legers, file = file.path(data_dashboard, "metadata.rda"))
 }
 
@@ -523,7 +549,9 @@ prep_legendes <- function(pop_geo, carte_operations, classe_ipr) {
             ggplot2::scale_color_viridis_c(name = "Nombre d'espèces\nlors de la dernière pêche") +
             ggplot2::theme_void() +
             ggplot2::theme(
-                legend.position = "bottom"
+                legend.position = "bottom",
+                legend.margin = ggplot2::margin(0, 0, 0, 0),
+                legend.box.margin = ggplot2::margin(0, 0, 0, 0)
             ) +
             ggplot2::guides(
                 size = ggplot2::guide_legend(
@@ -539,7 +567,7 @@ prep_legendes <- function(pop_geo, carte_operations, classe_ipr) {
         cowplot::get_plot_component(pattern = "guide-box-bottom") |>
         cowplot::plot_grid() +
         ggplot2::theme(
-            plot.margin = ggplot2::unit(c(0,0,0,0), 'pt')
+            plot.margin = ggplot2::margin(0, 0, 0, 0)
         )
 
     CouleursIpr <- classe_ipr |>
@@ -569,7 +597,9 @@ prep_legendes <- function(pop_geo, carte_operations, classe_ipr) {
             ) +
             ggplot2::theme_void() +
             ggplot2::theme(
-                legend.position = "bottom"
+                legend.position = "bottom",
+                legend.margin = ggplot2::margin(0, 0, 0, 0),
+                legend.box.margin = ggplot2::margin(0, 0, 0, 0)
             ) +
             ggplot2::guides(
                 size = ggplot2::guide_legend(
@@ -588,7 +618,7 @@ prep_legendes <- function(pop_geo, carte_operations, classe_ipr) {
         cowplot::get_plot_component(pattern = "guide-box-bottom") |>
         cowplot::plot_grid() +
         ggplot2::theme(
-            plot.margin = ggplot2::unit(c(0,0,0,0), 'pt')
+            plot.margin = ggplot2::margin(0, 0, 0, 0)
         )
 
 
@@ -609,7 +639,9 @@ prep_legendes <- function(pop_geo, carte_operations, classe_ipr) {
             ggplot2::scale_radius(name = "Nombre d'années où l'espèce\nest contactée") +
             ggplot2::theme_void() +
             ggplot2::theme(
-                legend.position = "bottom"
+                legend.position = "bottom",
+                legend.margin = ggplot2::margin(0, 0, 0, 0),
+                legend.box.margin = ggplot2::margin(0, 0, 0, 0)
             ) +
             ggplot2::guides(
                 size = ggplot2::guide_legend(
@@ -621,7 +653,7 @@ prep_legendes <- function(pop_geo, carte_operations, classe_ipr) {
         cowplot::get_plot_component(pattern = "guide-box-bottom") |>
         cowplot::plot_grid() +
         ggplot2::theme(
-            plot.margin = ggplot2::unit(c(0,0,0,0), 'pt')
+            plot.margin = ggplot2::margin(0, 0, 0, 0)
         )
 
     list(
