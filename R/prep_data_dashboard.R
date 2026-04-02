@@ -11,7 +11,7 @@
 #'
 #' @return La fonction ne retourne rien explicitement mais sauvegarde plusieurs fichiers
 #'     dans le répertoire de \code{data_dashboard} : un fichier .rda pour les métadonnées,
-#'     des fichiers .parquet pour les tables volumineuses, et un fichier .rds pour les données spatiales.
+#'     des fichiers .parquet pour les tables volumineuses.
 #' @export
 #'
 #' @examples
@@ -85,14 +85,14 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
 
     # Sauvegarde des légendes en format webp pour alléger les métadonnées
     message("Export des légendes au format WebP")
-    
+
     # Fonction pour sauvegarder et rogner l'image
     save_and_trim <- function(plot, filename, data_dashboard) {
         path <- file.path(data_dashboard, filename)
         ggplot2::ggsave(
-            path, 
-            plot = plot, 
-            width = 6, height = 2, dpi = 150, 
+            path,
+            plot = plot,
+            width = 6, height = 2, dpi = 150,
             device = ragg::agg_webp,
             bg = "transparent"
         )
@@ -125,7 +125,6 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
             ) |>
             sf::st_drop_geometry()
         arrow::write_parquet(pop_df, file.path(data_dashboard, "pop_geo.parquet"))
-        saveRDS(pop_geo, file.path(data_dashboard, "pop_geo.rds"))
     }
 
     # On ne garde que les petits objets (métadonnées) dans le RDA
