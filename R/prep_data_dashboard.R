@@ -128,7 +128,7 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     }
 
     # On ne garde que les petits objets (métadonnées) dans le RDA
-    objets_legers <- c("date_export", "codes_especes", "classe_ipr")
+    objets_legers <- c("date_export")
     save(list = objets_legers, file = file.path(data_dashboard, "metadata.rda"))
 }
 
