@@ -68,8 +68,9 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard, draw_l
                     )
 
     if (file.exists(file.path(data_dashboard, "pop_geo.parquet"))) {
+        new_ids <- unique(pop_geo$pop_id)
         old_pop_geo <- arrow::open_dataset(file.path(data_dashboard, "pop_geo.parquet")) |>
-            dplyr::filter(!pop_id %in% pop_geo$pop_id) |>
+            dplyr::filter(!pop_id %in% new_ids) |>
             dplyr::collect()
 
         if (nrow(old_pop_geo) > 0) {
@@ -92,8 +93,9 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard, draw_l
     captures <- prep_captures(stations, operations, observations, pop_geo)
 
     if (file.exists(file.path(data_dashboard, "captures.parquet"))) {
+        new_ids <- unique(captures$ope_id)
         old_captures <- arrow::open_dataset(file.path(data_dashboard, "captures.parquet")) |>
-            dplyr::filter(! ope_id %in% captures$ope_id) |>
+            dplyr::filter(! ope_id %in% new_ids) |>
             dplyr::collect()
 
         if (nrow(old_captures) > 0) {
@@ -114,8 +116,9 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard, draw_l
     metriques <- prep_metriques_ipr(indicateurs)
 
     if (file.exists(file.path(data_dashboard, "ipr.parquet"))) {
+        new_ids <- unique(ipr$ope_id)
         old_ipr <- arrow::open_dataset(file.path(data_dashboard, "ipr.parquet")) |>
-            dplyr::filter(! ope_id %in% ipr$ope_id) |>
+            dplyr::filter(! ope_id %in% new_ids) |>
             dplyr::collect()
 
         if (nrow(old_ipr) > 0) {
@@ -129,8 +132,9 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard, draw_l
     arrow::write_parquet(ipr, file.path(data_dashboard, "ipr.parquet"))
 
     if (file.exists(file.path(data_dashboard, "metriques.parquet"))) {
+        new_ids <- unique(metriques$ope_id)
         old_metriques <- arrow::open_dataset(file.path(data_dashboard, "metriques.parquet")) |>
-            dplyr::filter(! ope_id %in% ipr$ope_id) |>
+            dplyr::filter(! ope_id %in% new_ids) |>
             dplyr::collect()
 
         if (nrow(old_metriques) > 0) {
