@@ -31,7 +31,7 @@
 #' @importFrom ggplot2 ggsave margin
 #' @importFrom ragg agg_webp
 #' @importFrom magick image_read image_trim image_write
-prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
+prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard, draw_legend = TRUE) {
     if (is.null(data_sandre) | tools::file_ext(data_sandre) != "rda") stop("Les données des référentiels du Sandre doivent être stockées dans un fichier rda (data_sandre)")
     if (is.null(data_hubeau) | tools::file_ext(data_hubeau) != "rda") stop("Les données administratives doivent être stockées dans un fichier rda (data_admin)")
 
@@ -61,70 +61,121 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
         )
 
     message("Points de prélèvement")
-    pop_geo <- prep_pop(operations, dep_geo, reg_geo, sh_geo, dh_geo)
+    pop_geo <- prep_pop(operations, dep_geo, reg_geo, sh_geo, dh_geo) |>
+                    dplyr::mutate(
+                        x = sf::st_coordinates(geometry)[,1],
+                        y = sf::st_coordinates(geometry)[,2]
+                    )
+
+    if (file.exists(file.path(data_dashboard, "pop_geo.parquet"))) {
+        old_pop_geo <- arrow::open_dataset(file.path(data_dashboard, "pop_geo.parquet")) |>
+            dplyr::filter(!pop_id %in% pop_geo$pop_id) |>
+            dplyr::collect()
+
+        if (nrow(old_pop_geo) > 0) {
+            pop_geo <- dplyr::bind_rows(
+                old_pop_geo |>
+                    sf::st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE),
+                pop_geo
+            )
+        }
+    }
+
+    pop_df <- pop_geo |>
+        sf::st_drop_geometry()
+
+    arrow::write_parquet(pop_df, file.path(data_dashboard, "pop_geo.parquet"))
 
     message("Données de captures")
     codes_especes <- aspe::data_passerelle_taxo$esp_code_taxref |>
         purrr::set_names(aspe::data_passerelle_taxo$esp_code_alternatif)
     captures <- prep_captures(stations, operations, observations, pop_geo)
 
+    if (file.exists(file.path(data_dashboard, "captures.parquet"))) {
+        old_captures <- arrow::open_dataset(file.path(data_dashboard, "captures.parquet")) |>
+            dplyr::filter(! ope_id %in% captures$ope_id) |>
+            dplyr::collect()
+
+        if (nrow(old_captures) > 0) {
+            captures <- dplyr::bind_rows(
+                old_captures,
+                captures
+            )
+        }
+    }
+
+    arrow::write_parquet(captures, file.path(data_dashboard, "captures.parquet"))
+
     message("Données IPR")
     classe_ipr <- aspe::classe_ipr |>
         aspe::ip_completer_classes_couleur()
+
     ipr <- prep_ipr(indicateurs, operations, pop_geo)
     metriques <- prep_metriques_ipr(indicateurs)
+
+    if (file.exists(file.path(data_dashboard, "ipr.parquet"))) {
+        old_ipr <- arrow::open_dataset(file.path(data_dashboard, "ipr.parquet")) |>
+            dplyr::filter(! ope_id %in% ipr$ope_id) |>
+            dplyr::collect()
+
+        if (nrow(old_ipr) > 0) {
+            ipr <- dplyr::bind_rows(
+                old_ipr,
+                ipr
+            )
+        }
+    }
+
+    arrow::write_parquet(ipr, file.path(data_dashboard, "ipr.parquet"))
+
+    if (file.exists(file.path(data_dashboard, "metriques.parquet"))) {
+        old_metriques <- arrow::open_dataset(file.path(data_dashboard, "metriques.parquet")) |>
+            dplyr::filter(! ope_id %in% ipr$ope_id) |>
+            dplyr::collect()
+
+        if (nrow(old_metriques) > 0) {
+            metriques <- dplyr::bind_rows(
+                old_metriques,
+                metriques
+            )
+        }
+    }
+
+    arrow::write_parquet(metriques, file.path(data_dashboard, "metriques.parquet"))
 
     message("Données cartographiques")
     carte_operations <- prep_carte_operations(captures, ipr, classe_ipr, pop_geo)
 
-    legendes <- prep_legendes(pop_geo, carte_operations, classe_ipr)
+    arrow::write_parquet(carte_operations, file.path(data_dashboard, "carte_operations.parquet"))
 
-    LegendeEspeces <- legendes$especes
-    LegendeIpr <- legendes$ipr
-    LegendeDistribution <- legendes$distribution
+    if (draw_legend) {
+        legendes <- prep_legendes(pop_geo, carte_operations, classe_ipr)
+        LegendeEspeces <- legendes$especes
+        LegendeIpr <- legendes$ipr
+        LegendeDistribution <- legendes$distribution
 
-    # Sauvegarde des légendes en format webp pour alléger les métadonnées
-    message("Export des légendes au format WebP")
+        # Sauvegarde des légendes en format webp pour alléger les métadonnées
+        message("Export des légendes au format WebP")
 
-    # Fonction pour sauvegarder et rogner l'image
-    save_and_trim <- function(plot, filename, data_dashboard) {
-        path <- file.path(data_dashboard, filename)
-        ggplot2::ggsave(
-            path,
-            plot = plot,
-            width = 6, height = 2, dpi = 150,
-            device = ragg::agg_webp,
-            bg = "transparent"
-        )
-        # On utilise magick pour supprimer les espaces vides (trim)
-        img <- magick::image_read(path)
-        img <- magick::image_trim(img)
-        magick::image_write(img, path)
-    }
-
-    save_and_trim(LegendeEspeces, "legende_especes.webp", data_dashboard)
-    save_and_trim(LegendeIpr, "legende_ipr.webp", data_dashboard)
-    save_and_trim(LegendeDistribution, "legende_distribution.webp", data_dashboard)
-
-    # Conversion en Parquet pour optimisation mémoire
-    message("Export des tables au format Parquet")
-    tables <- c("captures", "ipr", "carte_operations", "metriques")
-
-    for (table in tables) {
-        if (exists(table)) {
-            arrow::write_parquet(get(table), file.path(data_dashboard, paste0(table, ".parquet")))
+        # Fonction pour sauvegarder et rogner l'image
+        save_and_trim <- function(plot, filename, data_dashboard) {
+            path <- file.path(data_dashboard, filename)
+            ggplot2::ggsave(
+                path,
+                plot = plot,
+                width = 6, height = 2, dpi = 150,
+                device = ragg::agg_webp,
+                bg = "transparent"
+            )
+            # On utilise magick pour supprimer les espaces vides (trim)
+            img <- magick::image_read(path)
+            img <- magick::image_trim(img)
+            magick::image_write(img, path)
         }
-    }
 
-    # Pour pop_geo (spatial), on le convertit en parquet avec coords
-    if (exists("pop_geo")) {
-        pop_df <- pop_geo |>
-            dplyr::mutate(
-                x = sf::st_coordinates(geometry)[,1],
-                y = sf::st_coordinates(geometry)[,2]
-            ) |>
-            sf::st_drop_geometry()
-        arrow::write_parquet(pop_df, file.path(data_dashboard, "pop_geo.parquet"))
+        save_and_trim(LegendeEspeces, "legende_especes.webp", data_dashboard)
+        save_and_trim(LegendeIpr, "legende_ipr.webp", data_dashboard)
+        save_and_trim(LegendeDistribution, "legende_distribution.webp", data_dashboard)
     }
 
     # On ne garde que les petits objets (métadonnées) dans le RDA
