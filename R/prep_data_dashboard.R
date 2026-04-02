@@ -71,7 +71,7 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
     message("Données IPR")
     classe_ipr <- aspe::classe_ipr |>
         aspe::ip_completer_classes_couleur()
-    ipr <- prep_ipr(indicateurs, pop_geo)
+    ipr <- prep_ipr(indicateurs, operations, pop_geo)
     metriques <- prep_metriques_ipr(indicateurs)
 
     message("Données cartographiques")
@@ -116,7 +116,7 @@ prep_data_dashboard <- function(data_sandre, data_hubeau, data_dashboard) {
         }
     }
 
-    # Pour pop_geo (spatial), on le garde en RDS et on le convertit en parquet avec coords
+    # Pour pop_geo (spatial), on le convertit en parquet avec coords
     if (exists("pop_geo")) {
         pop_df <- pop_geo |>
             dplyr::mutate(
@@ -215,8 +215,12 @@ prep_captures <- function(stations, operations, observations, pop) {
 #' @importFrom dplyr transmute filter distinct inner_join select
 #' @importFrom lubridate year
 #' @importFrom sf st_drop_geometry
-prep_ipr <- function(indicateurs, pop) {
+prep_ipr <- function(indicateurs, operations, pop) {
     indicateurs |>
+        dplyr::left_join(operations |>
+                             dplyr::distinct(code_operation, protocole_peche) |>
+                             dplyr::mutate(code_operation = as.character(code_operation)),
+                         by = "code_operation") |>
         dplyr::transmute(
             sta_id = NA_character_,
             sta_code_sandre = code_station,
@@ -229,6 +233,7 @@ prep_ipr <- function(indicateurs, pop) {
             altitude = ipr_altitude,
             sup_500m = ipr_altitude > 500,
             dept_id = code_departement,
+            pro_libelle = protocole_peche,
             ipr = ipr_note,
             cli_libelle = ipr_libelle_classe
         ) |>
@@ -244,7 +249,7 @@ prep_ipr <- function(indicateurs, pop) {
             by = "pop_id"
         ) |>
         dplyr::select(
-            pop_id, pop_libelle, ope_id, ope_date, annee, sup_500m, dept_id, ipr, cli_libelle, dh_libelle
+            pop_id, pop_libelle, ope_id, ope_date, annee, sup_500m, dept_id, pro_libelle, ipr, cli_libelle, dh_libelle
         )
 }
 
