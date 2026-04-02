@@ -98,12 +98,11 @@ get_data_poissons <- function(endpoint, stations = NULL, ..., ntry_max = 99) {
 #' @importFrom lubridate is.Date
 #' @importFrom dplyr distinct filter bind_rows
 #' @importFrom hubeau get_poisson_stations
-get_data_hubeau <- function(..., data_file) {
+get_data_hubeau <- function(..., data_file, last_export = NULL) {
     if (is.null(data_file) | tools::file_ext(data_file) != "rda") stop("L'emplacement où sauvegarder les données (data_file) doit être renseigné et correspondre à un fichier rda")
 
-    if (file.exists(data_file)) load(data_file)
-    if (exists("date_export")) {
-        date_from <- date_export
+    if (!is.null(last_export)) {
+        date_from <- last_export
         message("Récupération des opérations crées ou modifiées après le ", date_from)
     } else {
         date_from <- NULL
