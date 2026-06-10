@@ -332,9 +332,9 @@ prep_metriques_ipr <- function(indicateurs) {
             annee = lubridate::year(date_operation),
             ipr_nte, ipr_ner, ipr_nel, ipr_dit, ipr_dii, ipr_dio, ipr_dti
         ) |>
-        dplyr::filter(!is.na(ipr_ner)) |>
+        dplyr::filter(!is.na(ipr_nte)) |>
         tidyr::pivot_longer(
-            cols = ipr_ner:ipr_dti,
+            cols = ipr_nte:ipr_dti,
             names_to = "metrique",
             values_to = "valeur"
         ) |>
@@ -343,7 +343,7 @@ prep_metriques_ipr <- function(indicateurs) {
             variable = "ipr"
             ) |>
         dplyr::select(
-            pop_id, pop_libelle, ope_id, annee, ipr_nte, metrique, valeur, variable
+            pop_id, pop_libelle, ope_id, annee, metrique, valeur, variable
         )
 }
 
