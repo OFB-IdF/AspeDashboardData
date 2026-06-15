@@ -133,6 +133,9 @@ get_data_hubeau <- function(..., data_file, last_export = NULL) {
             )
     }
 
+    saveRDS(operations, file = file.path(dirname(data_file), "operations.rds"))
+
+
     if (nrow(operations) > 0) {
         stations <- hubeau::get_poisson_stations(
             fields = "code_station,libelle_station",
@@ -140,6 +143,8 @@ get_data_hubeau <- function(..., data_file, last_export = NULL) {
         ) |>
             dplyr::filter(code_station %in% operations$code_station) |>
             dplyr::distinct()
+
+        saveRDS(stations, file = file.path(dirname(data_file), "stations.rds"))
 
         indicateurs <- get_data_poissons(
             endpoint = "indicateurs",
@@ -149,6 +154,8 @@ get_data_hubeau <- function(..., data_file, last_export = NULL) {
         ) |>
             dplyr::distinct()
 
+        saveRDS(indicateurs, file = file.path(dirname(data_file), "indicateurs.rds"))
+
         observations <- get_data_poissons(
             endpoint = "observations",
             stations = unique(operations$code_station),
@@ -157,6 +164,8 @@ get_data_hubeau <- function(..., data_file, last_export = NULL) {
         ) |>
             dplyr::filter(!is.na(code_alternatif_taxon)) |>
             dplyr::distinct()
+
+        saveRDS(observations, file = file.path(dirname(data_file), "observations.rds"))
 
         save(operations, stations, indicateurs, observations, date_export, file = data_file)
         message("    Les données ont été sauvegardées dans ", data_file)
